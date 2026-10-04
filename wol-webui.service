@@ -6,17 +6,25 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=wol-webui
-Group=wol-webui
+# Transient, automatically allocated user/group. Persistent data is stored in
+# the StateDirectory below; the application code stays root-owned and read-only.
+DynamicUser=yes
+StateDirectory=wol-webui
+StateDirectoryMode=0750
 WorkingDirectory=/opt/wol_webui
 Environment=HOST=127.0.0.1
 Environment=PORT=8080
-Environment=DEVICES_FILE=/opt/wol_webui/devices.json
+Environment=DEVICES_FILE=/var/lib/wol-webui/devices.json
+# Optional overrides, e.g. PORT=8090 (read after the defaults above).
+EnvironmentFile=-/etc/wol-webui.conf
 ExecStart=/usr/bin/node /opt/wol_webui/server.js
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true
 PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/wol-webui
 
 [Install]
 WantedBy=multi-user.target

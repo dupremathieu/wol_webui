@@ -4,17 +4,22 @@
 #
 # Usage:
 #   sudo ./install.sh
+#   sudo PORT=8090 ./install.sh
 #
-# The service listens on 127.0.0.1 by default. Put a reverse proxy (nginx,
-# Caddy, ...) with authentication in front of it if you need remote access.
+# The service runs under systemd DynamicUser=yes: no static system account is
+# created. Persistent data (devices.json) lives in /var/lib/wol-webui via
+# StateDirectory=. The application code is installed root-owned in
+# /opt/wol_webui and is read-only to the service.
+#
+# The service listens on 127.0.0.1 by default; put a reverse proxy (nginx,
+# Caddy, ...) with authentication in front of it for remote access.
 
 set -euo pipefail
 
 INSTALL_DIR="/opt/wol_webui"
 SERVICE_NAME="wol-webui"
-SERVICE_USER="wol-webui"
-SERVICE_GROUP="wol-webui"
 UNIT_PATH="/etc/systemd/system/${SERVICE_NAME}.service"
+CONF_FILE="/etc/wol-webui.conf"
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "This script must be run as root (use sudo)." >&2
@@ -30,29 +35,21 @@ NODE_BIN="$(command -v node)"
 NODE_BIN_ESCAPED="${NODE_BIN//&/\\&}"
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-NOLOGIN_SHELL="$(command -v nologin || true)"
-if [[ -z "${NOLOGIN_SHELL}" ]]; then
-  NOLOGIN_SHELL="/usr/sbin/nologin"
-fi
-
 echo "Installing ${SERVICE_NAME} from ${SRC_DIR} to ${INSTALL_DIR}..."
 
-# Create the service account if needed.
-if ! getent group "${SERVICE_GROUP}" >/dev/null 2>&1; then
-  groupadd --system "${SERVICE_GROUP}"
-fi
-if ! id -u "${SERVICE_USER}" >/dev/null 2>&1; then
-  useradd --system --gid "${SERVICE_GROUP}" --home-dir "${INSTALL_DIR}" \
-    --shell "${NOLOGIN_SHELL}" "${SERVICE_USER}"
-fi
-
-# Copy the application files.
+# Copy the application files (owned by root; the DynamicUser only reads them).
+rm -rf "${INSTALL_DIR}"
 mkdir -p "${INSTALL_DIR}"
 install -m 0644 "${SRC_DIR}/server.js" "${INSTALL_DIR}/server.js"
 install -m 0644 "${SRC_DIR}/package.json" "${INSTALL_DIR}/package.json"
-rm -rf "${INSTALL_DIR}/public"
 cp -r "${SRC_DIR}/public" "${INSTALL_DIR}/public"
-chown -R "${SERVICE_USER}:${SERVICE_GROUP}" "${INSTALL_DIR}"
+
+# Optional: persist a custom port through the drop-in environment file.
+if [[ -n "${PORT:-}" ]]; then
+  echo "PORT=${PORT}" > "${CONF_FILE}"
+  chmod 0644 "${CONF_FILE}"
+  echo "Wrote ${CONF_FILE} with PORT=${PORT}"
+fi
 
 # Install the unit, rewriting the node path to match this system.
 sed "s#^ExecStart=.*#ExecStart=${NODE_BIN_ESCAPED} ${INSTALL_DIR}/server.js#" \
@@ -65,5 +62,3 @@ systemctl enable --now "${SERVICE_NAME}"
 echo
 echo "Done. Service status:"
 systemctl --no-pager --full status "${SERVICE_NAME}" || true
-echo
-echo "Running on http://127.0.0.1:8080 (configure a reverse proxy for remote access)."

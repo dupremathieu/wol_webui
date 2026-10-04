@@ -45,15 +45,33 @@ HOST=0.0.0.0 PORT=9000 node server.js
 
 ## Installation en service systemd
 
-Le script `install.sh` copie l'application dans `/opt/wol_webui`, crée un
-utilisateur système dédié et installe le service.
+Le script `install.sh` copie l'application dans `/opt/wol_webui` (appartenant à
+`root`, en lecture seule pour le service) et installe l'unité systemd.
 
 ```bash
 sudo ./install.sh
+# ou, pour changer le port d'écoute :
+sudo PORT=8090 ./install.sh
 ```
 
-Le fichier `wol-webui.service` sert de modèle ; le script réécrit le chemin de
-`node` pour l'adapter à votre système.
+Le service utilise **`DynamicUser=yes`** : systemd alloue un utilisateur et un
+groupe transitoires, sans créer de compte système permanent. Les données
+persistantes (`devices.json`) sont stockées via **`StateDirectory=wol-webui`**
+dans `/var/lib/wol-webui/`, avec des durcissements supplémentaires
+(`ProtectSystem=strict`, `NoNewPrivileges`, `PrivateTmp`).
+
+Le fichier `wol-webui.service` sert de modèle ; le script réécrit uniquement le
+chemin de `node` pour l'adapter à votre système.
+
+### Configuration (`/etc/wol-webui.conf`)
+
+Les valeurs par défaut peuvent être surchargées dans
+`/etc/wol-webui.conf`, chargé par l'unité :
+
+```ini
+HOST=127.0.0.1
+PORT=8090
+```
 
 Gestion du service :
 
