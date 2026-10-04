@@ -1,0 +1,22 @@
+[Unit]
+Description=Wake-on-LAN Web UI
+Documentation=https://github.com/dupremathieu/wol_webui
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wol-webui
+Group=wol-webui
+WorkingDirectory=/opt/wol_webui
+Environment=HOST=127.0.0.1
+Environment=PORT=8080
+Environment=DEVICES_FILE=/opt/wol_webui/devices.json
+ExecStart=/usr/bin/node /opt/wol_webui/server.js
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wake-on-LAN Web UI</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="page-header">
+    <h1>Wake-on-LAN</h1>
+    <p class="subtitle">Gérez vos appareils, réveillez-les et vérifiez leur connectivité.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2 id="form-title">Ajouter un appareil</h2>
+      <form id="device-form" novalidate>
+        <input type="hidden" id="device-id">
+        <div class="field">
+          <label for="name">Nom</label>
+          <input id="name" name="name" type="text" placeholder="Mon PC" autocomplete="off" required>
+        </div>
+        <div class="field">
+          <label for="mac">Adresse MAC</label>
+          <input id="mac" name="mac" type="text" placeholder="AA:BB:CC:DD:EE:FF" autocomplete="off" required>
+        </div>
+        <div class="field">
+          <label for="ip">Adresse IP / hôte <span class="hint">(optionnel)</span></label>
+          <input id="ip" name="ip" type="text" placeholder="192.168.1.50" autocomplete="off">
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="primary" id="submit-btn">Ajouter</button>
+          <button type="button" id="cancel-btn" class="ghost" hidden>Annuler</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Appareils</h2>
+        <button type="button" id="ping-all" class="ghost">Ping tout</button>
+      </div>
+      <div class="table-wrap">
+        <table id="device-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>MAC</th>
+              <th>IP</th>
+              <th>État</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="device-body"></tbody>
+        </table>
+      </div>
+      <p id="empty" class="empty" hidden>Aucun appareil. Ajoutez-en un ci-dessus.</p>
+    </section>
+
+    <section class="card">
+      <h2>Ping rapide</h2>
+      <form id="ping-form" novalidate>
+        <div class="field">
+          <label for="ping-host">Hôte à tester</label>
+          <input id="ping-host" name="host" type="text" placeholder="192.168.1.1 ou 8.8.8.8" autocomplete="off" required>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="primary">Ping</button>
+        </div>
+      </form>
+      <p id="ping-result" class="ping-result"></p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

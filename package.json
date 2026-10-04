@@ -1,0 +1,22 @@
+{
+  "name": "wol-webui",
+  "version": "1.0.0",
+  "description": "Simple Wake-on-LAN web UI with device management (name + MAC + IP) and ping connectivity checks.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "wake-on-lan",
+    "wol",
+    "magic-packet",
+    "ping",
+    "web-ui"
+  ],
+  "author": "Mathieu Dupré",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18"
+  }
+}
